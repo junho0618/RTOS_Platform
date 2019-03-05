@@ -71,7 +71,8 @@ void MX_USART2_UART_Init(void);
 void MX_USART3_UART_Init(void);
 
 /* USER CODE BEGIN Prototypes */
-
+#define PRINTF_UART_PORT                huart2
+size_t __write(int handle, uint8_t *buf, size_t bufSize);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

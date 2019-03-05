@@ -51,7 +51,7 @@
 #include "usbd_cdc_if.h"
 
 /* USER CODE BEGIN INCLUDE */
-
+#include "j_data.h"
 /* USER CODE END INCLUDE */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -291,9 +291,25 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
 static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
 {
   /* USER CODE BEGIN 6 */
-  USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0]);
-  USBD_CDC_ReceivePacket(&hUsbDeviceFS);
-  return (USBD_OK);
+	USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0]);
+	USBD_CDC_ReceivePacket(&hUsbDeviceFS);
+  
+	if( ( *Len <= APP_RX_DATA_SIZE ) && ( *Len > 10 ) )
+	{
+		inCommPkt_t		*packet;
+		inCommMsg_t		message;
+
+		packet			= ( inCommPkt_t * )osPoolAlloc( p_properties->h_InCommPool );
+		packet->source	= USB_INTERFACE;
+		packet->len		= *Len;
+		memcpy( (void *)packet->data, (const void *)Buf, *Len );
+		
+		message.source		= USB_INTERFACE;
+		message.p_incommpkt = packet;
+		osMessagePut( p_properties->h_InCommMessage, (uint32_t)&message, osWaitForever );
+	}
+			
+	return (USBD_OK);
   /* USER CODE END 6 */
 }
 

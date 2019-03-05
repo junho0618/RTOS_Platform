@@ -57,7 +57,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "j_data.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -78,6 +78,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+properties_t	*p_properties;
 
 /* USER CODE END PV */
 
@@ -86,10 +87,27 @@ void SystemClock_Config(void);
 void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */
 
+uint8_t	vars_init( properties_t *ivp );
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+size_t __write(int handle, uint8_t *buf, size_t bufSize)
+{
+    size_t nChars = 0;
+
+    if(handle == -1)                    return 0;
+    else if(handle != 1 && handle != 2) return -1;
+
+    for( ; bufSize > 0; --bufSize )
+    {
+        HAL_UART_Transmit( &PRINTF_UART_PORT, buf, 1 ,1 );
+        buf++;
+        nChars++;
+    }
+
+    return nChars;
+}
 
 /* USER CODE END 0 */
 
@@ -124,7 +142,15 @@ int main(void)
   MX_USART3_UART_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
+	printf( "Start RTOS Platform...\r\n" );
 
+	p_properties = (properties_t *)malloc( sizeof( properties_t ) );
+	if( p_properties == NULL )
+	{
+		Error_Handler();
+	}
+
+	vars_init( p_properties );
   /* USER CODE END 2 */
 
   /* Call init function for freertos objects (in freertos.c) */
@@ -214,6 +240,41 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+uint8_t	vars_init( properties_t *ivp )
+{
+	printf( "%s\r\n", __func__ );
+	
+//	osThreadDef( send, sendThread, osPriorityNormal, 0, 128 );
+//	ivp->h_sendThread		= osThreadCreate( osThread( send ), ivp );
+
+	osThreadDef( receive, receiveThread, osPriorityNormal, 0, 128 );
+	ivp->h_receiveThread	= osThreadCreate( osThread( receive ), ivp );
+
+	osPoolDef( incommpool, 10, inCommPkt_t );
+	ivp->h_InCommPool		= osPoolCreate( osPool( incommpool ) );
+
+	if( ivp->h_InCommPool == NULL )
+	{
+		printf( "NG\r\n" );
+	}
+	else
+	{
+		printf( "OK\r\n" );
+	}
+
+	osMessageQDef( incommmessage, 10, inCommMsg_t );
+	ivp->h_InCommMessage	= osMessageCreate( osMessageQ( incommmessage ), NULL );
+	if( ivp->h_InCommMessage == NULL )
+	{
+		printf( "NG\r\n" );
+	}
+	else
+	{
+		printf( "OK\r\n" );
+	}
+
+	return 0;
+}
 
 /* USER CODE END 4 */
 

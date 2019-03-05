@@ -55,7 +55,8 @@
 #include "cmsis_os.h"
 
 /* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */     
+/* USER CODE BEGIN Includes */
+#include "j_data.h"
 
 /* USER CODE END Includes */
 
@@ -149,7 +150,53 @@ void StartDefaultTask(void const * argument)
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
-     
+void sendThread( void const *argument )
+{
+	properties_t	*ivp	= (properties_t *)argument;
+
+//	printf( "%s\r\n", __func__ );
+	for(;;)
+	{
+		osDelay( 10 );
+	}
+}
+
+void receiveThread( void const *argument )
+{
+	properties_t	*ivp	= (properties_t *)argument;
+	inCommMsg_t		*message;
+	osEvent	evt;
+
+//	printf( "%s\r\n", __func__ );
+	for(;;)
+	{
+		evt = osMessageGet( ivp->h_InCommMessage, osWaitForever );
+
+		message	= (inCommMsg_t * )evt.value.p;
+				
+#if 0	// for test				
+		message->p_incommpkt->data[message->p_incommpkt->len] = NULL;
+//		printf( "i = %d\r\n", message->index );
+//		printf( "s = %d\r\n", message->p_incommpkt->source );
+//		printf( "l = %d\r\n", message->p_incommpkt->len );
+		printf( "d = %s\r", message->p_incommpkt->data );
+#endif		
+		if( ( message->p_incommpkt->data[0] == 's' ) &&
+			( message->p_incommpkt->data[1] == 't' ) &&
+			( message->p_incommpkt->data[2] == 'a' ) &&
+			( message->p_incommpkt->data[3] == 'r' ) &&
+			( message->p_incommpkt->data[4] == 't' ) )
+		{
+			message->p_incommpkt->data[message->p_incommpkt->len] = NULL;				// for test printf
+			printf( "d = %s\r", message->p_incommpkt->data );
+		}
+		
+
+		osPoolFree( ivp->h_InCommPool, message->p_incommpkt );
+
+		osDelay( 2 );
+	}
+}
 /* USER CODE END Application */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
