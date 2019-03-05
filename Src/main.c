@@ -149,8 +149,14 @@ int main(void)
 	{
 		Error_Handler();
 	}
-
+	
 	vars_init( p_properties );
+
+	// GPIO init
+	HAL_GPIO_WritePin( LD1_GPIO_Port, LD1_Pin, GPIO_PIN_RESET );
+	HAL_GPIO_WritePin( LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET );
+	HAL_GPIO_WritePin( LD3_GPIO_Port, LD3_Pin, GPIO_PIN_RESET );
+
   /* USER CODE END 2 */
 
   /* Call init function for freertos objects (in freertos.c) */

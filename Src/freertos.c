@@ -77,7 +77,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
-
+uint8_t	g_cUserBtnFlag;
 /* USER CODE END Variables */
 osThreadId defaultTaskHandle;
 
@@ -141,10 +141,19 @@ void StartDefaultTask(void const * argument)
 
   /* USER CODE BEGIN StartDefaultTask */
   /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
+	for(;;)
+	{
+		if( g_cUserBtnFlag == 1 )
+		{
+			g_cUserBtnFlag = 0;
+
+			HAL_GPIO_TogglePin( LD1_GPIO_Port, LD1_Pin );
+			HAL_GPIO_TogglePin( LD2_GPIO_Port, LD2_Pin );
+			HAL_GPIO_TogglePin( LD3_GPIO_Port, LD3_Pin );
+		}
+
+		osDelay(1);
+	}
   /* USER CODE END StartDefaultTask */
 }
 
