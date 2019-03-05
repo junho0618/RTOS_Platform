@@ -147,12 +147,14 @@ void StartDefaultTask(void const * argument)
 		{
 			g_cUserBtnFlag = 0;
 
-			HAL_GPIO_TogglePin( LD1_GPIO_Port, LD1_Pin );
-			HAL_GPIO_TogglePin( LD2_GPIO_Port, LD2_Pin );
-			HAL_GPIO_TogglePin( LD3_GPIO_Port, LD3_Pin );
+//			HAL_GPIO_TogglePin( LD1_GPIO_Port, LD1_Pin );
+//			HAL_GPIO_TogglePin( LD2_GPIO_Port, LD2_Pin );
+//			HAL_GPIO_TogglePin( LD3_GPIO_Port, LD3_Pin );
 		}
+		
+		HAL_GPIO_TogglePin( LD1_GPIO_Port, LD1_Pin );
 
-		osDelay(1);
+		osDelay(100);
 	}
   /* USER CODE END StartDefaultTask */
 }
@@ -190,20 +192,55 @@ void receiveThread( void const *argument )
 //		printf( "l = %d\r\n", message->p_incommpkt->len );
 		printf( "d = %s\r", message->p_incommpkt->data );
 #endif		
-		if( ( message->p_incommpkt->data[0] == 's' ) &&
-			( message->p_incommpkt->data[1] == 't' ) &&
-			( message->p_incommpkt->data[2] == 'a' ) &&
-			( message->p_incommpkt->data[3] == 'r' ) &&
-			( message->p_incommpkt->data[4] == 't' ) )
+		if( ( message->p_pkt->data[0] == 's' ) &&
+			( message->p_pkt->data[1] == 't' ) &&
+			( message->p_pkt->data[2] == 'a' ) &&
+			( message->p_pkt->data[3] == 'r' ) &&
+			( message->p_pkt->data[4] == 't' ) )
 		{
-			message->p_incommpkt->data[message->p_incommpkt->len] = NULL;				// for test printf
-			printf( "d = %s\r", message->p_incommpkt->data );
+			HAL_GPIO_TogglePin( LD2_GPIO_Port, LD2_Pin );
+			
+			message->p_pkt->data[message->p_pkt->len] = NULL;				// for test printf
+			printf( "d = %s\r", message->p_pkt->data );
 		}
 		
 
-		osPoolFree( ivp->h_InCommPool, message->p_incommpkt );
+		osPoolFree( ivp->h_InCommPool, message->p_pkt );
 
-		osDelay( 2 );
+		osDelay( 100 );
+	}
+}
+
+void canDiagThread( void const *argument )
+{
+	properties_t	*ivp	= (properties_t *)argument;
+
+//	printf( "%s\r\n", __func__ );
+	for(;;)
+	{
+		osDelay( 10 );
+	}
+}
+
+void kwpDiagThread( void const *argument )
+{
+	properties_t	*ivp	= (properties_t *)argument;
+
+//	printf( "%s\r\n", __func__ );
+	for(;;)
+	{
+		osDelay( 10 );
+	}
+}
+
+void ethDiagThread( void const *argument )
+{
+	properties_t	*ivp	= (properties_t *)argument;
+
+//	printf( "%s\r\n", __func__ );
+	for(;;)
+	{
+		osDelay( 10 );
 	}
 }
 /* USER CODE END Application */

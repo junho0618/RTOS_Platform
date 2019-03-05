@@ -304,8 +304,8 @@ static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
 		packet->len		= *Len;
 		memcpy( (void *)packet->data, (const void *)Buf, *Len );
 		
-		message.source		= USB_INTERFACE;
-		message.p_incommpkt = packet;
+		message.source	= USB_INTERFACE;
+		message.p_pkt	= packet;
 		osMessagePut( p_properties->h_InCommMessage, (uint32_t)&message, osWaitForever );
 	}
 			

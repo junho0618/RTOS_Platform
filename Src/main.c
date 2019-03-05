@@ -249,35 +249,64 @@ void SystemClock_Config(void)
 uint8_t	vars_init( properties_t *ivp )
 {
 	printf( "%s\r\n", __func__ );
+
+	// Create Memory Pool
+	osPoolDef( incommpool, MEMORY_POOL_SIZE, inCommPkt_t );
+	ivp->h_InCommPool		= osPoolCreate( osPool( incommpool ) );
+	if( ivp->h_InCommPool == NULL )			printf( "NG\r\n" );
+	else									printf( "OK\r\n" );
+
+	osPoolDef( diagpool, MEMORY_POOL_SIZE, diagPkt_t );
+	ivp->h_DiagPool			= osPoolCreate( osPool( diagpool ) );
+	if( ivp->h_DiagPool == NULL )			printf( "NG\r\n" );
+	else									printf( "OK\r\n" );
 	
-//	osThreadDef( send, sendThread, osPriorityNormal, 0, 128 );
-//	ivp->h_sendThread		= osThreadCreate( osThread( send ), ivp );
+	osPoolDef( outcommpool, MEMORY_POOL_SIZE, outCommPkt_t );
+	ivp->h_OutCommPool		= osPoolCreate( osPool( outcommpool ) );
+	if( ivp->h_OutCommPool == NULL )		printf( "NG\r\n" );
+	else									printf( "OK\r\n" );
+	
+	// Create Message Queue
+	osMessageQDef( incommmessage, MESSAGE_QUEUE_SIZE, inCommMsg_t );
+	ivp->h_InCommMessage	= osMessageCreate( osMessageQ( incommmessage ), NULL );
+	if( ivp->h_InCommMessage == NULL )		printf( "NG\r\n" );
+	else									printf( "OK\r\n" );
+
+	osMessageQDef( cancommmessage, MESSAGE_QUEUE_SIZE, diagMsg_t );
+	ivp->h_CanCommMessage	= osMessageCreate( osMessageQ( cancommmessage ), NULL );
+	if( ivp->h_CanCommMessage == NULL )		printf( "NG\r\n" );
+	else									printf( "OK\r\n" );
+	
+	osMessageQDef( kwpcommmessage, MESSAGE_QUEUE_SIZE, diagMsg_t );
+	ivp->h_KwpCommMessage	= osMessageCreate( osMessageQ( kwpcommmessage ), NULL );
+	if( ivp->h_KwpCommMessage == NULL )		printf( "NG\r\n" );
+	else									printf( "OK\r\n" );
+	
+	osMessageQDef( ethcommmessage, MESSAGE_QUEUE_SIZE, diagMsg_t );
+	ivp->h_EthCommMessage	= osMessageCreate( osMessageQ( ethcommmessage ), NULL );
+	if( ivp->h_EthCommMessage == NULL )		printf( "NG\r\n" );
+	else									printf( "OK\r\n" );
+	
+	osMessageQDef( outcommmessage, MESSAGE_QUEUE_SIZE, outCommMsg_t );
+	ivp->h_OutCommMessage	= osMessageCreate( osMessageQ( outcommmessage ), NULL );
+	if( ivp->h_OutCommMessage == NULL )		printf( "NG\r\n" );
+	else									printf( "OK\r\n" );
+	
+	// Start Thread	
+	osThreadDef( send, sendThread, osPriorityNormal, 0, 128 );
+	ivp->h_sendThread		= osThreadCreate( osThread( send ), ivp );
 
 	osThreadDef( receive, receiveThread, osPriorityNormal, 0, 128 );
 	ivp->h_receiveThread	= osThreadCreate( osThread( receive ), ivp );
-
-	osPoolDef( incommpool, 10, inCommPkt_t );
-	ivp->h_InCommPool		= osPoolCreate( osPool( incommpool ) );
-
-	if( ivp->h_InCommPool == NULL )
-	{
-		printf( "NG\r\n" );
-	}
-	else
-	{
-		printf( "OK\r\n" );
-	}
-
-	osMessageQDef( incommmessage, 10, inCommMsg_t );
-	ivp->h_InCommMessage	= osMessageCreate( osMessageQ( incommmessage ), NULL );
-	if( ivp->h_InCommMessage == NULL )
-	{
-		printf( "NG\r\n" );
-	}
-	else
-	{
-		printf( "OK\r\n" );
-	}
+	
+	osThreadDef( can, canDiagThread, osPriorityNormal, 0, 128 );
+	ivp->h_canDiagThread	= osThreadCreate( osThread( can ), ivp );
+	
+	osThreadDef( kwp, kwpDiagThread, osPriorityNormal, 0, 128 );
+	ivp->h_kwpDiagThread	= osThreadCreate( osThread( kwp ), ivp );
+	
+	osThreadDef( eth, ethDiagThread, osPriorityNormal, 0, 128 );
+	ivp->h_ethDiagThread	= osThreadCreate( osThread( eth ), ivp );
 
 	return 0;
 }
