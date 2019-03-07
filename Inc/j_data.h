@@ -8,6 +8,7 @@
  *--------------------------------------------------------------------*/
 #include "stm32h7xx.h"
 #include "cmsis_os.h"
+#include "string.h"
 
 /*----------------------------------------------------------------------
  *   Common Define
@@ -15,7 +16,8 @@
 #define	MEMORY_POOL_SIZE							10
 #define	MESSAGE_QUEUE_SIZE							10
 
-#define	INCOM_PACKET_SIZE							2048
+#define PROTOCOL_MIN_SIZE							3
+#define	DATA_PACKET_SIZE							2048
 #define	DIAGNOSTIC_PACKET_SIZE						100
 #define	OUTCOM_PACKET_SIZE							2048
 
@@ -41,47 +43,18 @@ typedef enum
 /*----------------------------------------------------------------------
  *   Common Structure
  *--------------------------------------------------------------------*/
-// InComm
 typedef struct
 {
-	uint8_t		source;
 	uint16_t	len;
-	uint8_t		data[INCOM_PACKET_SIZE];
-} inCommPkt_t;
-
-typedef struct
-{
-	uint32_t	source;
-	inCommPkt_t	*p_pkt;
-} inCommMsg_t;
-
-// Diagnostic
-typedef struct
-{
-	uint8_t		categori;
-	uint16_t	len;
-	uint8_t		data[DIAGNOSTIC_PACKET_SIZE];	
-} diagPkt_t;
+	uint8_t		data[DATA_PACKET_SIZE];
+} MsgPkt_t;
 
 typedef struct
 {
 	uint8_t		source;
-	diagPkt_t	*p_pkt;	
-} diagMsg_t;
-
-// OutComm
-typedef struct
-{
-	uint8_t		source;
-	uint16_t	len;
-	uint8_t		data[OUTCOM_PACKET_SIZE];
-} outCommPkt_t;
-
-typedef struct
-{
-	uint32_t		source;
-	outCommPkt_t	*p_pkt;
-} outCommMsg_t;
+	uint16_t	mod;
+	MsgPkt_t	*p_pkt;
+} MsgClst_t;
 
 typedef struct
 {
@@ -98,7 +71,7 @@ typedef struct
 	//   Memory Pool variable
 	//-----------------------------------------------------------------
 	osPoolId		h_InCommPool;
-	osPoolId		h_DiagPool;
+//	osPoolId		h_DiagPool;
 	osPoolId		h_OutCommPool;
 
 	//-----------------------------------------------------------------

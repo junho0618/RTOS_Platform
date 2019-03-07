@@ -58,6 +58,8 @@
 /* USER CODE BEGIN Includes */
 #include "j_data.h"
 
+#include "usbd_cdc_if.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -152,7 +154,7 @@ void StartDefaultTask(void const * argument)
 //			HAL_GPIO_TogglePin( LD3_GPIO_Port, LD3_Pin );
 		}
 		
-		HAL_GPIO_TogglePin( LD1_GPIO_Port, LD1_Pin );
+//		HAL_GPIO_TogglePin( LD1_GPIO_Port, LD1_Pin );
 
 		osDelay(100);
 	}
@@ -164,26 +166,56 @@ void StartDefaultTask(void const * argument)
 void sendThread( void const *argument )
 {
 	properties_t	*ivp	= (properties_t *)argument;
+	osEvent			evt;
+	MsgClst_t		*message;	
 
 //	printf( "%s\r\n", __func__ );
 	for(;;)
 	{
-		osDelay( 10 );
+		evt		= osMessageGet( ivp->h_OutCommMessage, osWaitForever );
+		message	= ( MsgClst_t * )evt.value.p;
+		
+		// add Send Output Interface code 
+		
+		switch( message->source )
+		{
+			case USB_INTERFACE	:	
+				CDC_Transmit_FS( message->p_pkt->data, message->p_pkt->len );
+//				message->p_pkt->data[message->p_pkt->len] = NULL;				// for test printf
+//				printf( "%s\r\n", message->p_pkt->data );			
+
+				break;
+				
+			case UART_INTERFACE	:
+				break;
+				
+			case WIFI_INTERFACE	:
+				break;
+				
+			case BT_INTERFACE	:				
+				break;
+				
+			default :
+				break;
+		}
+		
+		osPoolFree( ivp->h_OutCommPool, message->p_pkt );
+		
+		osDelay( 100 );
 	}
 }
 
 void receiveThread( void const *argument )
 {
 	properties_t	*ivp	= (properties_t *)argument;
-	inCommMsg_t		*message;
-	osEvent	evt;
-
+	osEvent			evt;
+	MsgClst_t		*message;	
+	
 //	printf( "%s\r\n", __func__ );
 	for(;;)
 	{
-		evt = osMessageGet( ivp->h_InCommMessage, osWaitForever );
-
-		message	= (inCommMsg_t * )evt.value.p;
+		evt		= osMessageGet( ivp->h_InCommMessage, osWaitForever );
+		message	= ( MsgClst_t * )evt.value.p;
 				
 #if 0	// for test				
 		message->p_incommpkt->data[message->p_incommpkt->len] = NULL;
@@ -192,20 +224,44 @@ void receiveThread( void const *argument )
 //		printf( "l = %d\r\n", message->p_incommpkt->len );
 		printf( "d = %s\r", message->p_incommpkt->data );
 #endif		
-		if( ( message->p_pkt->data[0] == 's' ) &&
-			( message->p_pkt->data[1] == 't' ) &&
-			( message->p_pkt->data[2] == 'a' ) &&
-			( message->p_pkt->data[3] == 'r' ) &&
-			( message->p_pkt->data[4] == 't' ) )
+		if( ( message->p_pkt->data[0] == 'G' ) &&
+			( message->p_pkt->data[1] == 'I' ) &&
+			( message->p_pkt->data[2] == 'T' ) )
 		{
-			HAL_GPIO_TogglePin( LD2_GPIO_Port, LD2_Pin );
+			MsgClst_t		target_message;
+			osMessageQId	h_target;
 			
-			message->p_pkt->data[message->p_pkt->len] = NULL;				// for test printf
-			printf( "d = %s\r", message->p_pkt->data );
+			int32_t			target	= message->p_pkt->data[3] % 3;
+			
+			switch( target )
+			{
+				case CAN_INTERFACE :
+					h_target	= ivp->h_CanCommMessage;
+					break;
+					
+				case KWP_INTERFACE :
+					h_target	= ivp->h_KwpCommMessage;
+					break;
+					
+				case ETH_INTERFACE :
+					h_target	= ivp->h_EthCommMessage;
+					break;
+					
+				default	:
+					break;
+			}
+			
+			target_message.source	= message->source;
+			target_message.p_pkt	= message->p_pkt;
+			osMessagePut( h_target, (uint32_t)&target_message, osWaitForever );	
 		}
 		
+//		message->p_pkt->data[message->p_pkt->len] = NULL;				// for test printf
+//		printf( "%s\r", message->p_pkt->data );			
 
-		osPoolFree( ivp->h_InCommPool, message->p_pkt );
+//		osPoolFree( ivp->h_InCommPool, message->p_pkt );
+		
+//		HAL_GPIO_TogglePin( LD2_GPIO_Port, LD2_Pin );
 
 		osDelay( 100 );
 	}
@@ -214,33 +270,83 @@ void receiveThread( void const *argument )
 void canDiagThread( void const *argument )
 {
 	properties_t	*ivp	= (properties_t *)argument;
+	osEvent			evt;
+	MsgClst_t		*message;
+	
+	MsgPkt_t		*packet;
+	MsgClst_t		target_message;
+	
+	uint8_t			test_string[30];
 
 //	printf( "%s\r\n", __func__ );
 	for(;;)
 	{
-		osDelay( 10 );
+		evt		= osMessageGet( ivp->h_CanCommMessage, osWaitForever );
+		message	= ( MsgClst_t * )evt.value.p;
+		
+		// add Parsign & Diagnostic code
+		
+#if 1	// test		
+		sprintf( (char *)test_string, "Juno Test Code!!" );
+
+		packet		= ( MsgPkt_t * )osPoolAlloc( ivp->h_OutCommPool );
+		packet->len	= strlen( (char *)test_string );
+		memcpy( (void *)packet->data, (const void *)test_string, strlen( (char *)test_string ) );
+		
+		target_message.source	= message->source;
+		target_message.p_pkt	= packet;
+		osMessagePut( ivp->h_OutCommMessage, (uint32_t)&target_message, osWaitForever );
+#endif		
+		
+		osPoolFree( ivp->h_InCommPool, message->p_pkt );
+		
+		HAL_GPIO_TogglePin( LD1_GPIO_Port, LD1_Pin );
+		
+		osDelay( 100 );
 	}
 }
 
 void kwpDiagThread( void const *argument )
 {
 	properties_t	*ivp	= (properties_t *)argument;
+	osEvent			evt;
+	MsgClst_t		*message;	
 
 //	printf( "%s\r\n", __func__ );
 	for(;;)
 	{
-		osDelay( 10 );
+		evt		= osMessageGet( ivp->h_KwpCommMessage, osWaitForever );
+		message	= ( MsgClst_t * )evt.value.p;
+		
+		// add Parsign & Diagnostic code 
+		
+		osPoolFree( ivp->h_InCommPool, message->p_pkt );
+		
+		HAL_GPIO_TogglePin( LD2_GPIO_Port, LD2_Pin );
+		
+		osDelay( 100 );
 	}
 }
 
 void ethDiagThread( void const *argument )
 {
 	properties_t	*ivp	= (properties_t *)argument;
+	osEvent			evt;
+	MsgClst_t		*message;	
 
 //	printf( "%s\r\n", __func__ );
 	for(;;)
 	{
-		osDelay( 10 );
+		evt		= osMessageGet( ivp->h_EthCommMessage, osWaitForever );
+		message	= ( MsgClst_t * )evt.value.p;
+		
+		// add Parsign & Diagnostic code 
+		
+		osPoolFree( ivp->h_InCommPool, message->p_pkt );
+		
+		HAL_GPIO_TogglePin( LD3_GPIO_Port, LD3_Pin );
+		
+		osDelay( 100 );
 	}
 }
 /* USER CODE END Application */

@@ -251,43 +251,43 @@ uint8_t	vars_init( properties_t *ivp )
 	printf( "%s\r\n", __func__ );
 
 	// Create Memory Pool
-	osPoolDef( incommpool, MEMORY_POOL_SIZE, inCommPkt_t );
+	osPoolDef( incommpool, MEMORY_POOL_SIZE, MsgPkt_t );
 	ivp->h_InCommPool		= osPoolCreate( osPool( incommpool ) );
 	if( ivp->h_InCommPool == NULL )			printf( "NG\r\n" );
 	else									printf( "OK\r\n" );
 
-	osPoolDef( diagpool, MEMORY_POOL_SIZE, diagPkt_t );
-	ivp->h_DiagPool			= osPoolCreate( osPool( diagpool ) );
-	if( ivp->h_DiagPool == NULL )			printf( "NG\r\n" );
-	else									printf( "OK\r\n" );
+//	osPoolDef( diagpool, MEMORY_POOL_SIZE, MsgPkt_t );
+//	ivp->h_DiagPool			= osPoolCreate( osPool( diagpool ) );
+//	if( ivp->h_DiagPool == NULL )			printf( "NG\r\n" );
+//	else									printf( "OK\r\n" );
 	
-	osPoolDef( outcommpool, MEMORY_POOL_SIZE, outCommPkt_t );
+	osPoolDef( outcommpool, MEMORY_POOL_SIZE, MsgPkt_t );
 	ivp->h_OutCommPool		= osPoolCreate( osPool( outcommpool ) );
 	if( ivp->h_OutCommPool == NULL )		printf( "NG\r\n" );
 	else									printf( "OK\r\n" );
 	
 	// Create Message Queue
-	osMessageQDef( incommmessage, MESSAGE_QUEUE_SIZE, inCommMsg_t );
+	osMessageQDef( incommmessage, MESSAGE_QUEUE_SIZE, MsgClst_t );
 	ivp->h_InCommMessage	= osMessageCreate( osMessageQ( incommmessage ), NULL );
 	if( ivp->h_InCommMessage == NULL )		printf( "NG\r\n" );
 	else									printf( "OK\r\n" );
 
-	osMessageQDef( cancommmessage, MESSAGE_QUEUE_SIZE, diagMsg_t );
+	osMessageQDef( cancommmessage, MESSAGE_QUEUE_SIZE, MsgClst_t );
 	ivp->h_CanCommMessage	= osMessageCreate( osMessageQ( cancommmessage ), NULL );
 	if( ivp->h_CanCommMessage == NULL )		printf( "NG\r\n" );
 	else									printf( "OK\r\n" );
 	
-	osMessageQDef( kwpcommmessage, MESSAGE_QUEUE_SIZE, diagMsg_t );
+	osMessageQDef( kwpcommmessage, MESSAGE_QUEUE_SIZE, MsgClst_t );
 	ivp->h_KwpCommMessage	= osMessageCreate( osMessageQ( kwpcommmessage ), NULL );
 	if( ivp->h_KwpCommMessage == NULL )		printf( "NG\r\n" );
 	else									printf( "OK\r\n" );
 	
-	osMessageQDef( ethcommmessage, MESSAGE_QUEUE_SIZE, diagMsg_t );
+	osMessageQDef( ethcommmessage, MESSAGE_QUEUE_SIZE, MsgClst_t );
 	ivp->h_EthCommMessage	= osMessageCreate( osMessageQ( ethcommmessage ), NULL );
 	if( ivp->h_EthCommMessage == NULL )		printf( "NG\r\n" );
 	else									printf( "OK\r\n" );
 	
-	osMessageQDef( outcommmessage, MESSAGE_QUEUE_SIZE, outCommMsg_t );
+	osMessageQDef( outcommmessage, MESSAGE_QUEUE_SIZE, MsgClst_t );
 	ivp->h_OutCommMessage	= osMessageCreate( osMessageQ( outcommmessage ), NULL );
 	if( ivp->h_OutCommMessage == NULL )		printf( "NG\r\n" );
 	else									printf( "OK\r\n" );
