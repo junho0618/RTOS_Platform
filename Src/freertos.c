@@ -57,6 +57,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "j_data.h"
+#include "j_ring.h"
 
 #include "usbd_cdc_if.h"
 
@@ -154,7 +155,28 @@ void StartDefaultTask(void const * argument)
 //			HAL_GPIO_TogglePin( LD3_GPIO_Port, LD3_Pin );
 		}
 		
-//		HAL_GPIO_TogglePin( LD1_GPIO_Port, LD1_Pin );
+		HAL_GPIO_TogglePin( LD1_GPIO_Port, LD1_Pin );
+		
+		/* parsing uart data */
+		if( GetQueueSize( &rbUartRx ) >= UART_PROTOCOL_START_SIZE )
+		{
+			if( Dequeue( &rbUartRx ) == 'G' )
+			{
+				if( Dequeue( &rbUartRx ) == 'I' )
+				{
+					if( Dequeue( &rbUartRx ) == 'T' )
+					{
+						// test 
+						while( !IsEmpty( &rbUartRx ) )
+						{
+							printf( "%c\r\n", Dequeue( &rbUartRx ) );			
+						}
+						
+						// add message queue
+					}
+				}
+			}			
+		}
 
 		osDelay(100);
 	}

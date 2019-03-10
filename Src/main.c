@@ -58,6 +58,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "j_data.h"
+#include "j_ring.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -79,6 +80,7 @@
 
 /* USER CODE BEGIN PV */
 properties_t	*p_properties;
+RingBuffer_t	rbUartRx;
 
 /* USER CODE END PV */
 
@@ -151,6 +153,9 @@ int main(void)
 	}
 	
 	vars_init( p_properties );
+	
+	InitRingBuffer( &rbUartRx );
+	HAL_UART_Receive_IT( &huart2, &rbUartRx.dummy, 1 );
 
 	// GPIO init
 	HAL_GPIO_WritePin( LD1_GPIO_Port, LD1_Pin, GPIO_PIN_RESET );

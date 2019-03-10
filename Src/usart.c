@@ -49,6 +49,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "usart.h"
+#include "j_ring.h"
 
 /* USER CODE BEGIN 0 */
 
@@ -209,7 +210,14 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 } 
 
 /* USER CODE BEGIN 1 */
-
+void HAL_UART_RxCpltCallback( UART_HandleTypeDef *huart )
+{
+    if( huart->Instance == USART2 )
+    {   
+        Enqueue( &rbUartRx, rbUartRx.dummy );
+        HAL_UART_Receive_IT( huart, &rbUartRx.dummy, 1 );
+    }   
+}
 /* USER CODE END 1 */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

@@ -1,14 +1,17 @@
 ﻿/*----------------------------------------------------------------------
  *   RTOS platform data & defines
  *--------------------------------------------------------------------*/
- #pragma once
-
+#ifndef __J_DATA_H__
+#define __J_DATA_H__
+ 
 /*----------------------------------------------------------------------
  *   Common Include
  *--------------------------------------------------------------------*/
 #include "stm32h7xx.h"
 #include "cmsis_os.h"
 #include "string.h"
+
+#include "j_ring.h"
 
 /*----------------------------------------------------------------------
  *   Common Define
@@ -20,6 +23,8 @@
 #define	DATA_PACKET_SIZE							2048
 #define	DIAGNOSTIC_PACKET_SIZE						100
 #define	OUTCOM_PACKET_SIZE							2048
+
+#define UART_PROTOCOL_START_SIZE					3
 
 
 /*----------------------------------------------------------------------
@@ -59,15 +64,6 @@ typedef struct
 typedef struct
 {
 	//-----------------------------------------------------------------
-	//   Thread variable
-	//-----------------------------------------------------------------
-	osThreadId		h_sendThread;
-	osThreadId		h_receiveThread;
-	osThreadId		h_canDiagThread;
-	osThreadId		h_kwpDiagThread;
-	osThreadId		h_ethDiagThread;
-
-	//-----------------------------------------------------------------
 	//   Memory Pool variable
 	//-----------------------------------------------------------------
 	osPoolId		h_InCommPool;
@@ -82,6 +78,16 @@ typedef struct
 	osMessageQId	h_KwpCommMessage;
 	osMessageQId	h_EthCommMessage;
 	osMessageQId	h_OutCommMessage;
+	
+	//-----------------------------------------------------------------
+	//   Thread variable
+	//-----------------------------------------------------------------
+	osThreadId		h_sendThread;
+	osThreadId		h_receiveThread;
+	osThreadId		h_canDiagThread;
+	osThreadId		h_kwpDiagThread;
+	osThreadId		h_ethDiagThread;
+
 } properties_t;
 
 /*----------------------------------------------------------------------
@@ -95,3 +101,5 @@ void ethDiagThread( void const *argument );
 
 
 extern properties_t	*p_properties;
+
+#endif // __J_DATA_H__
