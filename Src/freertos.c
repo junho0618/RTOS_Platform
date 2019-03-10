@@ -169,7 +169,7 @@ void StartDefaultTask(void const * argument)
 						// test 
 						while( !IsEmpty( &rbUartRx ) )
 						{
-							printf( "%c\r\n", Dequeue( &rbUartRx ) );			
+							printf( "%c", Dequeue( &rbUartRx ) );			
 						}
 						
 						// add message queue
