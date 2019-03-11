@@ -96,8 +96,8 @@ uint8_t	vars_init( properties_t *ivp );
 /* USER CODE BEGIN 0 */
 PUTCHAR_PROTOTYPE
 {
-  HAL_UART_Transmit(&PRINTF_UART_PORT, (uint8_t *)&ch, 1, 0xFFFF);
-  return ch;
+	HAL_UART_Transmit(&PRINTF_UART_PORT, (uint8_t *)&ch, 1, 0xFFFF);
+	return ch;
 }
 /* USER CODE END 0 */
 
@@ -134,6 +134,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
 	printf( "Start RTOS Platform...\r\n" );
 
+	/* Variable Init------------------------------------------------------------*/
 	p_properties = (properties_t *)malloc( sizeof( properties_t ) );
 	if( p_properties == NULL )
 	{
@@ -142,10 +143,11 @@ int main(void)
 	
 	vars_init( p_properties );
 	
+	/* Ring buffer Init for uart input -----------------------------------------*/
 	InitRingBuffer( &rbUartRx );
 	HAL_UART_Receive_IT( &huart2, &rbUartRx.dummy, 1 );
 
-	// GPIO init
+	/* Gpio Init for LED -------------------------------------------------------*/
 	HAL_GPIO_WritePin( LD1_GPIO_Port, LD1_Pin, GPIO_PIN_RESET );
 	HAL_GPIO_WritePin( LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET );
 	HAL_GPIO_WritePin( LD3_GPIO_Port, LD3_Pin, GPIO_PIN_RESET );
@@ -246,44 +248,36 @@ uint8_t	vars_init( properties_t *ivp )
 	// Create Memory Pool
 	osPoolDef( incommpool, MEMORY_POOL_SIZE, MsgPkt_t );
 	ivp->h_InCommPool		= osPoolCreate( osPool( incommpool ) );
-	if( ivp->h_InCommPool == NULL )			printf( "NG\r\n" );
-	else									printf( "OK\r\n" );
+	if( ivp->h_InCommPool == NULL )			printf( "error... osPoolCreate incommpool\r\n" );
 
 //	osPoolDef( diagpool, MEMORY_POOL_SIZE, MsgPkt_t );
 //	ivp->h_DiagPool			= osPoolCreate( osPool( diagpool ) );
-//	if( ivp->h_DiagPool == NULL )			printf( "NG\r\n" );
-//	else									printf( "OK\r\n" );
+//	if( ivp->h_DiagPool == NULL )			printf( "error... osPoolCreate diagpool\r\n" );
 	
 	osPoolDef( outcommpool, MEMORY_POOL_SIZE, MsgPkt_t );
 	ivp->h_OutCommPool		= osPoolCreate( osPool( outcommpool ) );
-	if( ivp->h_OutCommPool == NULL )		printf( "NG\r\n" );
-	else									printf( "OK\r\n" );
+	if( ivp->h_OutCommPool == NULL )		printf( "error... osPoolCreate outcommpool\r\n" );
 	
 	// Create Message Queue
 	osMessageQDef( incommmessage, MESSAGE_QUEUE_SIZE, MsgClst_t );
 	ivp->h_InCommMessage	= osMessageCreate( osMessageQ( incommmessage ), NULL );
-	if( ivp->h_InCommMessage == NULL )		printf( "NG\r\n" );
-	else									printf( "OK\r\n" );
+	if( ivp->h_InCommMessage == NULL )		printf( "error... osMessageCreate incommmessage\r\n" );
 
 	osMessageQDef( cancommmessage, MESSAGE_QUEUE_SIZE, MsgClst_t );
 	ivp->h_CanCommMessage	= osMessageCreate( osMessageQ( cancommmessage ), NULL );
-	if( ivp->h_CanCommMessage == NULL )		printf( "NG\r\n" );
-	else									printf( "OK\r\n" );
+	if( ivp->h_CanCommMessage == NULL )		printf( "error... osMessageCreate cancommmessage\r\n" );
 	
 	osMessageQDef( kwpcommmessage, MESSAGE_QUEUE_SIZE, MsgClst_t );
 	ivp->h_KwpCommMessage	= osMessageCreate( osMessageQ( kwpcommmessage ), NULL );
-	if( ivp->h_KwpCommMessage == NULL )		printf( "NG\r\n" );
-	else									printf( "OK\r\n" );
+	if( ivp->h_KwpCommMessage == NULL )		printf( "error... osMessageCreate kwpcommmessage\r\n" );
 	
 	osMessageQDef( ethcommmessage, MESSAGE_QUEUE_SIZE, MsgClst_t );
 	ivp->h_EthCommMessage	= osMessageCreate( osMessageQ( ethcommmessage ), NULL );
-	if( ivp->h_EthCommMessage == NULL )		printf( "NG\r\n" );
-	else									printf( "OK\r\n" );
+	if( ivp->h_EthCommMessage == NULL )		printf( "error... osMessageCreate ethcommmessage\r\n" );
 	
 	osMessageQDef( outcommmessage, MESSAGE_QUEUE_SIZE, MsgClst_t );
 	ivp->h_OutCommMessage	= osMessageCreate( osMessageQ( outcommmessage ), NULL );
-	if( ivp->h_OutCommMessage == NULL )		printf( "NG\r\n" );
-	else									printf( "OK\r\n" );
+	if( ivp->h_OutCommMessage == NULL )		printf( "error... osMessageCreate outcommmessage\r\n" );
 	
 	// Start Thread	
 	osThreadDef( send, sendThread, osPriorityNormal, 0, 128 );
