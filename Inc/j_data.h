@@ -64,6 +64,11 @@ typedef struct
 typedef struct
 {
 	//-----------------------------------------------------------------
+	//   Status Check variable
+	//-----------------------------------------------------------------
+	uint8_t			m_uartInFlag;
+
+	//-----------------------------------------------------------------
 	//   Memory Pool variable
 	//-----------------------------------------------------------------
 	osPoolId		h_InCommPool;
@@ -82,23 +87,25 @@ typedef struct
 	//-----------------------------------------------------------------
 	//   Thread variable
 	//-----------------------------------------------------------------
-	osThreadId		h_sendThread;
+	osThreadId		h_uartRecThread;
 	osThreadId		h_receiveThread;
+
 	osThreadId		h_canDiagThread;
 	osThreadId		h_kwpDiagThread;
 	osThreadId		h_ethDiagThread;
 
+	osThreadId		h_sendThread;
 } properties_t;
 
 /*----------------------------------------------------------------------
  *   Common Function
  *--------------------------------------------------------------------*/
 void sendThread( void const *argument );
+void uartRecThread( void const *argument );
 void receiveThread( void const *argument );
 void canDiagThread( void const *argument );
 void kwpDiagThread( void const *argument );
 void ethDiagThread( void const *argument );
-
 
 extern properties_t	*p_properties;
 

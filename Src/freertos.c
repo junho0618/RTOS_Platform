@@ -59,6 +59,7 @@
 #include "j_data.h"
 #include "j_ring.h"
 
+#include "usart.h"
 #include "usbd_cdc_if.h"
 
 /* USER CODE END Includes */
@@ -155,28 +156,7 @@ void StartDefaultTask(void const * argument)
 //			HAL_GPIO_TogglePin( LD3_GPIO_Port, LD3_Pin );
 		}
 		
-		HAL_GPIO_TogglePin( LD1_GPIO_Port, LD1_Pin );
-		
-		/* parsing uart data */
-		if( GetQueueSize( &rbUartRx ) >= UART_PROTOCOL_START_SIZE )
-		{
-			if( Dequeue( &rbUartRx ) == 'G' )
-			{
-				if( Dequeue( &rbUartRx ) == 'I' )
-				{
-					if( Dequeue( &rbUartRx ) == 'T' )
-					{
-						// test 
-						while( !IsEmpty( &rbUartRx ) )
-						{
-							printf( "%c", Dequeue( &rbUartRx ) );			
-						}
-						
-						// add message queue
-					}
-				}
-			}			
-		}
+//		HAL_GPIO_TogglePin( LD1_GPIO_Port, LD1_Pin );
 
 		osDelay(100);
 	}
@@ -209,6 +189,7 @@ void sendThread( void const *argument )
 				break;
 				
 			case UART_INTERFACE	:
+				HAL_UART_Transmit( &huart2, message->p_pkt->data, message->p_pkt->len, 300 );
 				break;
 				
 			case WIFI_INTERFACE	:
@@ -309,7 +290,7 @@ void canDiagThread( void const *argument )
 		// add Parsign & Diagnostic code
 		
 #if 1	// test		
-		sprintf( (char *)test_string, "Juno Test Code!!" );
+		sprintf( (char *)test_string, "Can processed Date!!" );
 
 		packet		= ( MsgPkt_t * )osPoolAlloc( ivp->h_OutCommPool );
 		packet->len	= strlen( (char *)test_string );
@@ -334,6 +315,11 @@ void kwpDiagThread( void const *argument )
 	osEvent			evt;
 	MsgClst_t		*message;	
 
+	MsgPkt_t		*packet;
+	MsgClst_t		target_message;
+	
+	uint8_t			test_string[30];
+
 //	printf( "%s\r\n", __func__ );
 	for(;;)
 	{
@@ -341,6 +327,18 @@ void kwpDiagThread( void const *argument )
 		message	= ( MsgClst_t * )evt.value.p;
 		
 		// add Parsign & Diagnostic code 
+		
+#if 1	// test		
+		sprintf( (char *)test_string, "KWP processed Date!!" );
+
+		packet		= ( MsgPkt_t * )osPoolAlloc( ivp->h_OutCommPool );
+		packet->len	= strlen( (char *)test_string );
+		memcpy( (void *)packet->data, (const void *)test_string, strlen( (char *)test_string ) );
+		
+		target_message.source	= message->source;
+		target_message.p_pkt	= packet;
+		osMessagePut( ivp->h_OutCommMessage, (uint32_t)&target_message, osWaitForever );
+#endif
 		
 		osPoolFree( ivp->h_InCommPool, message->p_pkt );
 		
@@ -356,6 +354,11 @@ void ethDiagThread( void const *argument )
 	osEvent			evt;
 	MsgClst_t		*message;	
 
+	MsgPkt_t		*packet;
+	MsgClst_t		target_message;
+	
+	uint8_t			test_string[30];
+
 //	printf( "%s\r\n", __func__ );
 	for(;;)
 	{
@@ -364,12 +367,103 @@ void ethDiagThread( void const *argument )
 		
 		// add Parsign & Diagnostic code 
 		
+#if 1	// test		
+		sprintf( (char *)test_string, "ETH processed Date!!" );
+
+		packet		= ( MsgPkt_t * )osPoolAlloc( ivp->h_OutCommPool );
+		packet->len	= strlen( (char *)test_string );
+		memcpy( (void *)packet->data, (const void *)test_string, strlen( (char *)test_string ) );
+		
+		target_message.source	= message->source;
+		target_message.p_pkt	= packet;
+		osMessagePut( ivp->h_OutCommMessage, (uint32_t)&target_message, osWaitForever );
+#endif
+		
 		osPoolFree( ivp->h_InCommPool, message->p_pkt );
 		
 		HAL_GPIO_TogglePin( LD3_GPIO_Port, LD3_Pin );
 		
 		osDelay( 100 );
 	}
+}
+
+void uartRecThread( void const *argument )
+{
+	properties_t	*ivp	= (properties_t *)argument;
+	
+	MsgPkt_t	*packet;
+	MsgClst_t	message;
+	
+	uint16_t	len;
+	uint16_t	i;
+	uint16_t	waitTime;
+
+	
+	for(;;)
+	{
+		/* Uart Data가 들어올때까지 Wait */
+		while( !ivp->m_uartInFlag )
+		{
+			osDelay( 100 );
+		}
+		
+		if( GetQueueSize( &rbUartRx ) >= UART_PROTOCOL_START_SIZE )
+		{
+			if( Dequeue( &rbUartRx ) == 'G' )
+			{
+				if( Dequeue( &rbUartRx ) == 'I' )
+				{
+					if( Dequeue( &rbUartRx ) == 'T' )
+					{					
+						/* Get Data Length */
+						len = Dequeue( &rbUartRx ) * 256;
+						len = len + Dequeue( &rbUartRx );
+						printf( "data len = %d\r\n", len );
+							
+						/* 모든 데이터가 수신될때까지 대기 */
+						waitTime = 300;		// 3s
+						while( GetQueueSize( &rbUartRx ) < len )
+						{							
+							waitTime--;
+							if( waitTime == 0 )
+							{
+								printf( "error... timeout receive uart data!!\r\n" );
+								while( !IsEmpty( &rbUartRx ) )
+								{
+									Dequeue( &rbUartRx );
+								}
+								
+								break;
+							}
+							
+							osDelay( 10 );
+						}
+						
+						if( waitTime == 0 )		continue;						// uart 처리 Reset
+							
+						/* 수신된 데이트를 Packet에 저장 */
+						packet	= ( MsgPkt_t * )osPoolAlloc( ivp->h_InCommPool );
+						packet->len	= len;						
+							
+						for( i = 0; i < len; i++ )
+						{						
+							packet->data[i] = Dequeue( &rbUartRx );
+							printf( "0x%02x\r\n", packet->data[i] );										
+						}
+							
+						/* Packet을 InCommMessage에 전달 */
+						message.source	= UART_INTERFACE;
+						message.p_pkt	= packet;
+						osMessagePut( ivp->h_InCommMessage, (uint32_t)&message, osWaitForever );
+			
+						ivp->m_uartInFlag	= 0;									
+					}
+				}
+			}			
+		}
+		
+		osDelay( 10 );
+	}	
 }
 /* USER CODE END Application */
 

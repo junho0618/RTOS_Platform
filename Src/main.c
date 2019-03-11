@@ -244,6 +244,9 @@ void SystemClock_Config(void)
 uint8_t	vars_init( properties_t *ivp )
 {
 	printf( "%s\r\n", __func__ );
+	
+	// Initialize Flag Variable
+	ivp->m_uartInFlag			= 0;
 
 	// Create Memory Pool
 	osPoolDef( incommpool, MEMORY_POOL_SIZE, MsgPkt_t );
@@ -294,6 +297,9 @@ uint8_t	vars_init( properties_t *ivp )
 	
 	osThreadDef( eth, ethDiagThread, osPriorityNormal, 0, 128 );
 	ivp->h_ethDiagThread	= osThreadCreate( osThread( eth ), ivp );
+		
+	osThreadDef( uartRec, uartRecThread, osPriorityNormal, 0, 128 );
+	p_properties->h_uartRecThread	= osThreadCreate( osThread( uartRec ), ivp );
 
 	return 0;
 }

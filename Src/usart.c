@@ -49,10 +49,10 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "usart.h"
-#include "j_ring.h"
 
 /* USER CODE BEGIN 0 */
-
+#include "j_data.h"
+#include "j_ring.h"
 /* USER CODE END 0 */
 
 UART_HandleTypeDef huart2;
@@ -216,6 +216,8 @@ void HAL_UART_RxCpltCallback( UART_HandleTypeDef *huart )
     {   
         Enqueue( &rbUartRx, rbUartRx.dummy );
         HAL_UART_Receive_IT( huart, &rbUartRx.dummy, 1 );
+        
+        p_properties->m_uartInFlag	= 1;
     }   
 }
 /* USER CODE END 1 */
